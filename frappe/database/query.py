@@ -333,8 +333,9 @@ class Engine:
 			self.apply_group_by(group_by)
 
 		if order_by:
+			has_aggregate = any(getattr(f, "is_aggregate", False) for f in getattr(self, "fields", []))
 			if not (
-				self.is_postgres and is_select and (distinct or group_by)
+				self.is_postgres and is_select and (distinct or group_by or has_aggregate)
 			):  # ignore in Postgres since order by fields need to appear in select distinct
 				self.apply_order_by(order_by)
 			else:

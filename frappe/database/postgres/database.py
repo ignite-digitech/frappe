@@ -3,6 +3,7 @@ from contextlib import contextmanager
 
 import psycopg2
 import psycopg2.extensions
+import psycopg2.extras
 from psycopg2 import sql
 from psycopg2.errorcodes import (
 	CLASS_INTEGRITY_CONSTRAINT_VIOLATION,
@@ -194,6 +195,8 @@ class PostgresDatabase(PostgresExceptionUtil, Database):
 
 		conn = psycopg2.connect(**conn_settings)
 		conn.set_isolation_level(ISOLATION_LEVEL_REPEATABLE_READ)
+		# JSON columns stay text, as they are on MariaDB: Document and parse_json expect strings.
+		psycopg2.extras.register_default_json(conn, loads=lambda value: value)
 
 		return conn
 
