@@ -869,11 +869,13 @@ class User(Document):
 		login_with_mobile = cint(frappe.get_system_settings("allow_login_using_mobile_number"))
 		login_with_username = cint(frappe.get_system_settings("allow_login_using_user_name"))
 
-		or_filters = [{"name": user_name}]
+		# `like` ignores case on both engines. `=` does on MariaDB only, and phones capitalize the first letter of an email.
+		literal = user_name.replace("\\", "\\\\").replace("%", "\\%").replace("_", "\\_")
+		or_filters = [{"name": ["like", literal]}]
 		if login_with_mobile:
 			or_filters.append({"mobile_no": user_name})
 		if login_with_username:
-			or_filters.append({"username": user_name})
+			or_filters.append({"username": ["like", literal]})
 
 		users = frappe.get_all("User", fields=["name", "enabled"], or_filters=or_filters, limit=1)
 		if not users:
