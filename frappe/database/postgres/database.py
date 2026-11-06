@@ -22,7 +22,7 @@ from psycopg2.errors import (
 	SequenceGeneratorLimitExceeded,
 	SyntaxError,
 )
-from psycopg2.extensions import ISOLATION_LEVEL_REPEATABLE_READ, TRANSACTION_STATUS_INERROR
+from psycopg2.extensions import ISOLATION_LEVEL_READ_COMMITTED, TRANSACTION_STATUS_INERROR
 
 import frappe
 from frappe.database.database import Database
@@ -194,7 +194,9 @@ class PostgresDatabase(PostgresExceptionUtil, Database):
 			conn_settings["port"] = self.port
 
 		conn = psycopg2.connect(**conn_settings)
-		conn.set_isolation_level(ISOLATION_LEVEL_REPEATABLE_READ)
+		# Each statement sees the latest commits, as code written for locks expects. At REPEATABLE READ a read after a
+		# lock uses the old snapshot, and the resulting serialization errors aren't retried.
+		conn.set_isolation_level(ISOLATION_LEVEL_READ_COMMITTED)
 		# JSON columns stay text, as they are on MariaDB: Document and parse_json expect strings.
 		psycopg2.extras.register_default_json(conn, loads=lambda value: value)
 
