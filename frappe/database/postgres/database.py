@@ -566,8 +566,8 @@ def modify_values(values):
 		return values
 
 	if isinstance(values, dict):
-		for k, v in values.items():
-			values[k] = modify_value(v)
+		# A new dict: changing the caller's would turn 0 into "0", which is truthy, for its later queries.
+		values = {k: modify_value(v) for k, v in values.items()}
 	elif isinstance(values, tuple | list):
 		new_values = []
 		for val in values:

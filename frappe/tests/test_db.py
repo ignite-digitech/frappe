@@ -714,6 +714,13 @@ class TestDB(IntegrationTestCase):
 			modify_values((23, 23.0, 23.00004345, "wow", [1, 2, 3, "abc"])),
 		)
 
+	@run_only_if(db_type_is.POSTGRES)
+	def test_sql_leaves_the_callers_values_alone(self):
+		# Reports reuse their filters across queries: a 0 turned into "0" would read as true in the next one.
+		filters = {"is_pos": 0, "names": [1, 2]}
+		frappe.db.sql("select %(is_pos)s, %(names)s", filters)
+		self.assertEqual(filters, {"is_pos": 0, "names": [1, 2]})
+
 	def test_callbacks(self):
 		order_of_execution = []
 
